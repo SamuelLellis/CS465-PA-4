@@ -194,7 +194,7 @@ class ExactInference(InferenceModule):
         newPosDist is a util.Counter object, where for each position p in
         self.legalPositions,
 
-        newPostDist[p] = Pr( ghost is at position p at time t + 1 | ghost is at position oldPos at time t )
+        newPostDist[p] = Pr( ghost is at position p at time t + 1 | ghost is at position oldPos at time t 
 
         (and also given Pacman's current position).  You may also find it useful
         to loop over key, value pairs in newPosDist, like:
@@ -225,13 +225,13 @@ class ExactInference(InferenceModule):
         positions after a time update from a particular position.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
-        #for S in allPossible:
-         #   s = 0
-          #  for sumstate in allPossible:
-           #     s += beliefs[sumstate]*transitionProbability[sumstate]
-           # p = emissionProbability[observation]
-           # newBeliefs[S] = s * p    
+        #util.raiseNotDefined()
+        for S in self.legalPositions:
+            s = 0
+            for sumstate in self.legalPositions:
+                newPosDist = self.getPositionDistribution(self.setGhostPosition(gameState, S))
+                s += self.beliefs[sumstate]* newPosDist[sumstate]
+            self.beliefs[S] = s   
             
         
 
