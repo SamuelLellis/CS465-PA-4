@@ -161,10 +161,7 @@ class ExactInference(InferenceModule):
             allPossible[self.getJailPosition()] = 1.0
         else:
             allPossible = self.beliefs.copy()
-            for p in self.l
-            
-            
-            egalPositions:
+            for p in self.legalPositions:
                 trueDistance = util.manhattanDistance(p,pacmanPosition)
                 allPossible[p] *= emissionModel[trueDistance]
             
@@ -229,6 +226,14 @@ class ExactInference(InferenceModule):
         """
         "*** YOUR CODE HERE ***"
         util.raiseNotDefined()
+        #for S in allPossible:
+         #   s = 0
+          #  for sumstate in allPossible:
+           #     s += beliefs[sumstate]*transitionProbability[sumstate]
+           # p = emissionProbability[observation]
+           # newBeliefs[S] = s * p    
+            
+        
 
     def getBeliefDistribution(self):
         return self.beliefs
