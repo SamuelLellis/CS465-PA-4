@@ -17,6 +17,7 @@ import util
 import random
 import busters
 import game
+from collections import namedtuple
 
 class InferenceModule:
     """
@@ -251,7 +252,6 @@ class ParticleFilter(InferenceModule):
     def setNumParticles(self, numParticles):
         self.numParticles = numParticles
 
-
     def initializeUniformly(self, gameState):
         """
         Initializes a list of particles. Use self.numParticles for the number of
@@ -264,7 +264,19 @@ class ParticleFilter(InferenceModule):
         Storing your particles as a Counter (where there could be an associated
         weight with each position) is incorrect and may produce errors.
         """
-        "*** YOUR CODE HERE ***"
+        numStates = len(self.legalPositions)
+        particlesPerState = self.numParticles / numStates
+
+        self.particles = []
+
+        for i in range(numStates):
+            for _ in range(particlesPerState):
+                self.particles.append(self.legalPositions[i])
+
+        # Add to first legal state to fix offset
+        offset = self.numParticles - len(self.particles)
+        for i in range(offset):
+            self.particles.append(self.legalPositions[i])
 
     def observe(self, observation, gameState):
         """
@@ -296,8 +308,30 @@ class ParticleFilter(InferenceModule):
         noisyDistance = observation
         emissionModel = busters.getObservationDistribution(noisyDistance)
         pacmanPosition = gameState.getPacmanPosition()
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+        # Captured?
+        if noisyDistance == None:
+            for i in range(self.numParticles):
+                self.particles[i] = self.getJailPosition()
+            return
+
+        # Acquire weights
+        sampleDist = util.Counter()
+        for i, pos in enumerate(self.particles):
+            noisyDistance = observation
+            trueDistance = util.manhattanDistance(pos, pacmanPosition)
+            weight = emissionModel[trueDistance]
+            sampleDist[pos] += weight
+        sampleDist.normalize()
+
+        # Check for edge case
+        if sampleDist.totalCount() == 0:
+            self.initializeUniformly(gameState)
+            return
+
+        # Renormalize
+        for i in range(self.numParticles):
+            self.particles[i] = util.sample(sampleDist)
 
     def elapseTime(self, gameState):
         """
@@ -313,8 +347,10 @@ class ParticleFilter(InferenceModule):
         util.sample(Counter object) is a helper method to generate a sample from
         a belief distribution.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        for i, pos in enumerate(self.particles):
+            dist = self.getPositionDistribution(self.setGhostPosition(gameState, pos))
+            newPos = util.sample(dist)
+            self.particles[i] = newPos
 
     def getBeliefDistribution(self):
         """
@@ -323,8 +359,11 @@ class ParticleFilter(InferenceModule):
         essentially converts a list of particles into a belief distribution (a
         Counter object)
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        sampleDist = util.Counter()
+        for i, pos in enumerate(self.particles):
+            sampleDist[pos] += 1
+        sampleDist.normalize()
+        return sampleDist
 
 class MarginalInference(InferenceModule):
     """
@@ -443,7 +482,6 @@ class JointParticleFilter:
             return
         emissionModels = [busters.getObservationDistribution(dist) for dist in noisyDistances]
 
-        "*** YOUR CODE HERE ***"
 
     def getParticleWithGhostInJail(self, particle, ghostIndex):
         """
@@ -536,4 +574,3 @@ def setGhostPositions(gameState, ghostPositions):
         conf = game.Configuration(pos, game.Directions.STOP)
         gameState.data.agentStates[index + 1] = game.AgentState(conf, False)
     return gameState
-
